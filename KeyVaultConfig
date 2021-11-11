@@ -1,0 +1,16 @@
+  public static void AzureKeyVaultConfiguration(this IConfigurationBuilder configuration)
+        {
+            var keys = configuration.Build().GetSection("AzureKeyVaultOptions").Get<AzureKeyVaultOptions>();
+#if DEBUG
+            configuration.AddAzureKeyVault($"https://{keys.KeyVaultName}.vault.azure.net/", keys.ClientId, keys.ClientSecret, new DefaultKeyVaultSecretManager());
+#else
+            var buildConfig = configuration.Build();
+            var keyVaultEndpoint = $"https://{buildConfig["KeyVaultName"]}.vault.azure.net/";
+            if (!string.IsNullOrEmpty(keyVaultEndpoint))
+            {
+                var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                var keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                configuration.AddAzureKeyVault(keyVaultEndpoint, keyVaultClient, new DefaultKeyVaultSecretManager());
+            }
+#endif
+        }
