@@ -1,0 +1,41 @@
+//        //Blob Storage Authentiction with connection string to ServiceCollection
+//        public static void BlobStorageConfiguration(this IServiceCollection services, IConfiguration configuration)
+//        {
+//#if DEBUG
+//            services.AddSingleton(IServiceProvider => new BlobServiceClient(configuration.GetValue<string>("AzureBlobStrogeOptions:ConnectionString")));
+//#endif
+//        }
+        //Blob Storage Authentiction with connection string
+        public static BlobContainerClient GetBlobContainerClient(this IConfiguration configuration, string containerName)
+        {
+#if DEBUG
+            return new BlobServiceClient(configuration.GetValue<string>("AzureBlobStrogeOptions:ConnectionString")).GetBlobContainerClient(containerName);
+#else
+            var storageAccount = configuration.GetValue<string>("BlobStorageAccountName");
+            string containerEndpoint = $"https://{storageAccount}.blob.core.windows.net/{containerName}";
+            return new BlobContainerClient(new Uri(containerEndpoint),
+                                            new DefaultAzureCredential());
+            return containerClient;
+#endif
+        }
+        
+        ------------
+        
+        
+          public string GetBlobContent(string blobName,string containerName)
+        {
+
+            var containerClient = GetBlobContainerClient(containerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
+            var content = blobClient.DownloadContent().Value.Content.ToString();
+            return content;
+        }
+        private BlobContainerClient GetBlobContainerClient(string containerName)
+        {
+#if DEBUG
+            return _blobServiceClient.GetBlobContainerClient(containerName);
+#else
+            return _configuration.GetBlobContainerClient(containerName);       
+#endif
+        }
+    }
