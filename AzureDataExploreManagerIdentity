@@ -1,0 +1,40 @@
+  private KustoConnectionStringBuilder GetKustoConnectionString()
+        {
+#if DEBUG
+            AuthenticationContext authenticationContext = new AuthenticationContext($"{keys.AADUri}/{keys.DomainName}");
+            ClientCredential credentials = new ClientCredential(keys.AzureDataExplorerCredential.ClientId, keys.AzureDataExplorerCredential.SecretKey);
+            AuthenticationResult result = authenticationContext.AcquireTokenAsync(keys.AzureDataExplorerCredential.Cluster, credentials).Result;
+            return new KustoConnectionStringBuilder(keys.AzureDataExplorerCredential.Cluster).WithAadApplicationTokenAuthentication(result.AccessToken);
+#else
+            var serviceUri = _configuration["AzureDataExplorerCluster"];
+            return new KustoConnectionStringBuilder(serviceUri)
+                .WithAadSystemManagedIdentity();
+
+#endif
+        }
+        
+        
+        ----------------------
+        
+        
+         public IKustoIngestionResult KustoJsonIngestionResult(string table_Name, StreamDescription streamDescription)
+        {
+            using (var queryProvider = KustoIngestFactory.CreateDirectIngestClient(GetKustoConnectionString()))
+            {
+                KustoIngestionProperties kustoIngestionProperties = new KustoQueuedIngestionProperties(databaseName: keys.AzureDataExplorerCredential.Database, tableName: table_Name)
+                {
+                    ReportLevel = IngestionReportLevel.FailuresAndSuccesses,
+                    ReportMethod = IngestionReportMethod.Queue,
+                    Format = DataSourceFormat.json
+                };
+                return queryProvider.IngestFromStream(streamDescription, kustoIngestionProperties);
+            }
+        }
+        public IKustoIngestionResult KustoDataReaderIngestionResult(string table_Name, IDataReader reader)
+        {
+            using (var queryProvider = KustoIngestFactory.CreateDirectIngestClient(GetKustoConnectionString()))
+            {
+                var kustoIngestionProperties = new KustoIngestionProperties(keys.AzureDataExplorerCredential.Database, table_Name);
+                return queryProvider.IngestFromDataReader(reader, kustoIngestionProperties);
+            }
+        }
