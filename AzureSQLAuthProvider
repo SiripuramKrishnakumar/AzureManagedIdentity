@@ -3,7 +3,7 @@
         {
             var conStrName = configuration.GetValue<string>("Keys:ConnectionStrName");
 #if DEBUG
-            services.AddDbContext<integrasqlpocContext>(config => config.UseSqlServer(configuration.GetConnectionString(conStrName)), ServiceLifetime.Singleton);
+            services.AddDbContext<MyContext>(config => config.UseSqlServer(configuration.GetConnectionString(conStrName)), ServiceLifetime.Singleton);
 #else
                 services.AddDbContext<MyDatabaseContext>(options =>
                 {
