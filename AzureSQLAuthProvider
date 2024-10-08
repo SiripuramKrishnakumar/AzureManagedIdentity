@@ -44,7 +44,7 @@
     Create User in Azure SQL with app service name for authentication
     
     
-    Create user [uglcmsapplication] from external provider
-    alter role db_datareader add member[uglcmsapplication]
-    alter role db_datareader add member[uglcmsapplication]
+    Create user [cmsapplication] from external provider
+    alter role db_datareader add member[cmsapplication]
+    alter role db_datareader add member[cmsapplication]
     
